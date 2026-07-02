@@ -314,7 +314,7 @@
   <div class="stats" id="stats"></div>
 
   <div class="card">
-    <h2>New Case Entry</h2>
+    <h2 id="formHeading">New Case Entry</h2>
     <form id="form">
       <div class="field">
         <label for="date">Date</label>
@@ -453,7 +453,8 @@
         <textarea id="notes" placeholder="Indication, complications, findings..."></textarea>
       </div>
       <div class="actions">
-        <button type="submit">Add Case</button>
+        <button type="button" class="secondary" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
+        <button type="submit" id="submitBtn">Add Case</button>
       </div>
     </form>
   </div>
@@ -529,6 +530,7 @@ CaseLogAuth.protect(async function (authKey) {
 
   const storageKey = 'cardiacCases_enc';
   let cases = (await CaseLogAuth.decryptJSON(authKey, localStorage.getItem(storageKey))) || [];
+  let editingIndex = null;
 
   const PROCEDURE_GROUPS = [
     { category: 'Coronary', valveRelated: false, items: ['CABG'] },
@@ -834,13 +836,18 @@ CaseLogAuth.protect(async function (authKey) {
         <td>${c.temperature ? c.temperature + ' °C' : '—'}</td>
         <td>${c.outcome ? `<span class="badge" style="${style}">${c.outcome}</span>` : '—'}</td>
         <td class="notes">${c.notes || ''}</td>
-        <td class="row-actions"><button data-idx="${c._idx}" class="delete">✕</button></td>
+        <td class="row-actions"><button data-idx="${c._idx}" class="edit">✎</button><button data-idx="${c._idx}" class="delete">✕</button></td>
       `;
       tableBody.appendChild(tr);
     });
 
+    tableBody.querySelectorAll('.edit').forEach(btn => {
+      btn.addEventListener('click', () => startEdit(Number(btn.dataset.idx)));
+    });
+
     tableBody.querySelectorAll('.delete').forEach(btn => {
       btn.addEventListener('click', async () => {
+        if (editingIndex === Number(btn.dataset.idx)) stopEdit();
         cases.splice(Number(btn.dataset.idx), 1);
         await save();
         updateProcedureFilter();
@@ -905,6 +912,87 @@ CaseLogAuth.protect(async function (authKey) {
     cannulationOtherTextEl.style.display = 'none';
   }
 
+  const submitBtn = document.getElementById('submitBtn');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  const formHeading = document.getElementById('formHeading');
+
+  function setSelectWithOther(selectEl, otherTextEl, value) {
+    if (!value) {
+      selectEl.value = '';
+    } else if (value.startsWith('Other:')) {
+      selectEl.value = 'Other';
+      otherTextEl.value = value.slice(6).trim();
+    } else if (value === 'Other') {
+      selectEl.value = 'Other';
+      otherTextEl.value = '';
+    } else {
+      selectEl.value = value;
+    }
+    selectEl.dispatchEvent(new Event('change'));
+  }
+
+  function populateProcedureCheckboxes(procedures) {
+    procedureGroupsEl.querySelectorAll('.procedure-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('procedureOtherText').value = '';
+    (procedures || []).forEach(p => {
+      if (p.startsWith('Other:')) {
+        document.getElementById('procedureOtherCheck').checked = true;
+        document.getElementById('procedureOtherText').value = p.slice(6).trim();
+      } else if (p === 'Other') {
+        document.getElementById('procedureOtherCheck').checked = true;
+      } else {
+        const cb = [...procedureGroupsEl.querySelectorAll('.procedure-checkbox')].find(el => el.value === p);
+        if (cb) cb.checked = true;
+      }
+    });
+    updateConditionalFields();
+  }
+
+  function startEdit(idx) {
+    const c = cases[idx];
+    if (!c) return;
+    editingIndex = idx;
+    document.getElementById('date').value = c.date || '';
+    document.getElementById('urgency').value = c.urgency || '';
+    setSelectWithOther(diagnosisSelectEl, diagnosisOtherTextEl, c.diagnosis);
+    populateProcedureCheckboxes(c.procedures);
+    document.getElementById('role').value = c.role || '';
+    document.getElementById('surgeon').value = c.surgeon || '';
+    setSelectWithOther(exposureSelectEl, exposureOtherTextEl, c.exposure);
+    setSelectWithOther(cannulationSelectEl, cannulationOtherTextEl, c.cannulation);
+    document.getElementById('valveType').value = c.valveType || '';
+    document.getElementById('grafts').value = c.grafts || '';
+    document.getElementById('cardioplegia').value = c.cardioplegia || '';
+    document.getElementById('cpbTime').value = c.cpbTime || '';
+    document.getElementById('clampTime').value = c.clampTime || '';
+    document.getElementById('arrestTime').value = c.arrestTime || '';
+    document.getElementById('bloodLoss').value = c.bloodLoss || '';
+    document.getElementById('temperature').value = c.temperature || '';
+    document.getElementById('outcome').value = c.outcome || '';
+    document.getElementById('notes').value = c.notes || '';
+    procedureErrorEl.style.display = 'none';
+    submitBtn.textContent = 'Update Case';
+    cancelEditBtn.style.display = '';
+    formHeading.textContent = 'Edit Case';
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function stopEdit() {
+    editingIndex = null;
+    form.reset();
+    resetProcedureGroups();
+    resetDiagnosisGroups();
+    resetExposureField();
+    resetCannulationField();
+    document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+    updateConditionalFields();
+    submitBtn.textContent = 'Add Case';
+    cancelEditBtn.style.display = 'none';
+    formHeading.textContent = 'New Case Entry';
+  }
+
+  cancelEditBtn.addEventListener('click', stopEdit);
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const procedures = getSelectedProcedures();
@@ -914,7 +1002,7 @@ CaseLogAuth.protect(async function (authKey) {
     }
     procedureErrorEl.style.display = 'none';
 
-    cases.push({
+    const caseData = {
       date: document.getElementById('date').value,
       urgency: document.getElementById('urgency').value,
       diagnosis: getSelectedDiagnosis(),
@@ -933,15 +1021,15 @@ CaseLogAuth.protect(async function (authKey) {
       temperature: document.getElementById('temperature').value,
       outcome: document.getElementById('outcome').value,
       notes: document.getElementById('notes').value.trim(),
-    });
+    };
+
+    if (editingIndex !== null) {
+      cases[editingIndex] = caseData;
+    } else {
+      cases.push(caseData);
+    }
     await save();
-    form.reset();
-    resetProcedureGroups();
-    resetDiagnosisGroups();
-    resetExposureField();
-    resetCannulationField();
-    document.getElementById('date').value = new Date().toISOString().slice(0, 10);
-    updateConditionalFields();
+    stopEdit();
     updateProcedureFilter();
     updateStats();
     buildFieldStats();
