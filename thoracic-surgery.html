@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-32.png">
-<meta name="theme-color" content="#059669">
+<meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Thoracic Log">
@@ -588,7 +588,7 @@
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 </script>
-<script src="xlsx.full.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="msal-browser.min.js"></script>
 <script src="onedrive-config.js"></script>
 <script src="onedrive.js"></script>
@@ -1221,20 +1221,6 @@ CaseLogAuth.protect(async function (authKey) {
     } catch (err) {
       statusEl.textContent = 'OneDrive save failed: ' + err.message;
     }
-  });
-
-  function collapseOpenSections(target) {
-    document.querySelectorAll('details.collapsible-field[open]').forEach(d => {
-      const field = d.closest('.field');
-      if (!field || !field.contains(target)) d.open = false;
-    });
-  }
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('.row-actions')) return;
-    collapseOpenSections(e.target);
-  });
-  document.addEventListener('focusin', (e) => {
-    collapseOpenSections(e.target);
   });
 
   buildDiagnosisGroups();
