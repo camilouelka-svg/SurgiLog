@@ -1,11 +1,10 @@
-const CACHE_NAME = 'case-log-v21';
+const CACHE_NAME = 'case-log-v22';
 const APP_SHELL = [
   './index.html',
   './cardiac-surgery.html',
   './thoracic-surgery.html',
   './vascular-surgery.html',
   './auth.js',
-  './xlsx.full.min.js',
   './msal-browser.min.js',
   './onedrive-config.js',
   './onedrive.js',
