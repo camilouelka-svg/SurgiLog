@@ -1,4 +1,4 @@
-const CACHE_NAME = 'case-log-v23';
+const CACHE_NAME = 'case-log-v24';
 const APP_SHELL = [
   './index.html',
   './cardiac-surgery.html',
