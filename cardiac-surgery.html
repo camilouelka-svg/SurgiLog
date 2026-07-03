@@ -956,7 +956,7 @@ CaseLogAuth.protect(async function (authKey) {
       renderDistributionBlock('Role', tally(c => c.role)),
       renderDistributionBlock('Surgical Steps Performed', tally(c => c.surgicalSteps || [])),
       renderDistributionBlock('Exposure Technique', tally(c => c.exposure)),
-      renderDistributionBlock('Cannulation Strategy', tally(c => c.cannulation || [])),
+      renderDistributionBlock('Cannulation Strategy', tally(c => cannulationArray(c))),
       renderDistributionBlock('Valve Type', tally(c => c.valveType)),
       renderDistributionBlock('Cardioplegia', tally(c => c.cardioplegia)),
       renderDistributionBlock('Outcome', tally(c => c.outcome)),
@@ -974,7 +974,7 @@ CaseLogAuth.protect(async function (authKey) {
       .filter(c => {
         if (procFilter && !(c.procedures || []).includes(procFilter)) return false;
         if (!q) return true;
-        return [c.patientId, c.surgeon, c.notes, c.urgency, c.diagnosis, ...(c.procedures || []), ...(c.surgicalSteps || []), c.exposure, ...(c.cannulation || []), c.valveType, ...graftsArray(c), c.cardioplegia]
+        return [c.patientId, c.surgeon, c.notes, c.urgency, c.diagnosis, ...(c.procedures || []), ...(c.surgicalSteps || []), c.exposure, ...cannulationArray(c), c.valveType, ...graftsArray(c), c.cardioplegia]
           .join(' ').toLowerCase().includes(q);
       })
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -995,7 +995,7 @@ CaseLogAuth.protect(async function (authKey) {
         <td>${c.surgeon || ''}</td>
         <td>${(c.surgicalSteps || []).join(', ') || '—'}</td>
         <td>${c.exposure || '—'}</td>
-        <td>${(c.cannulation || []).join(', ') || '—'}</td>
+        <td>${cannulationArray(c).join(', ') || '—'}</td>
         <td>${c.valveType || '—'}</td>
         <td>${graftsArray(c).join(', ') || '—'}</td>
         <td>${c.cardioplegia || '—'}</td>
@@ -1045,6 +1045,12 @@ CaseLogAuth.protect(async function (authKey) {
   function graftsArray(c) {
     if (Array.isArray(c.grafts)) return c.grafts;
     if (typeof c.grafts === 'string' && c.grafts) return c.grafts.split(',').map(s => s.trim()).filter(Boolean);
+    return [];
+  }
+
+  function cannulationArray(c) {
+    if (Array.isArray(c.cannulation)) return c.cannulation;
+    if (typeof c.cannulation === 'string' && c.cannulation) return [c.cannulation];
     return [];
   }
 
@@ -1381,7 +1387,7 @@ CaseLogAuth.protect(async function (authKey) {
     document.getElementById('surgeon').value = c.surgeon || '';
     populateSurgicalStepsCheckboxes(c.surgicalSteps);
     setSelectWithOther(exposureSelectEl, exposureOtherTextEl, c.exposure);
-    populateCannulationCheckboxes(c.cannulation);
+    populateCannulationCheckboxes(cannulationArray(c));
     document.getElementById('valveType').value = c.valveType || '';
     populateGraftBuilder(c);
     document.getElementById('cardioplegia').value = c.cardioplegia || '';
@@ -1474,7 +1480,7 @@ CaseLogAuth.protect(async function (authKey) {
 
   function getExportTable() {
     const headers = ['Date', 'Patient ID', 'Urgency', 'Diagnosis', 'Procedure(s)', 'Role', 'Surgeon', 'Surgical Steps Performed', 'Exposure', 'Cannulation', 'Valve Type', 'Grafts', 'Cardioplegia', 'CPB Time (min)', 'Cross-Clamp Time (min)', 'Circulatory Arrest Time (min)', 'Estimated Blood Loss (mL)', 'Lowest Core Temperature (°C)', 'Outcome', 'Notes'];
-    const rows = cases.map(c => [c.date, c.patientId, c.urgency, c.diagnosis, (c.procedures || []).join('; '), c.role, c.surgeon, (c.surgicalSteps || []).join('; '), c.exposure, (c.cannulation || []).join('; '), c.valveType, graftsArray(c).join('; '), c.cardioplegia, c.cpbTime, c.clampTime, c.arrestTime, c.bloodLoss, c.temperature, c.outcome, c.notes]);
+    const rows = cases.map(c => [c.date, c.patientId, c.urgency, c.diagnosis, (c.procedures || []).join('; '), c.role, c.surgeon, (c.surgicalSteps || []).join('; '), c.exposure, cannulationArray(c).join('; '), c.valveType, graftsArray(c).join('; '), c.cardioplegia, c.cpbTime, c.clampTime, c.arrestTime, c.bloodLoss, c.temperature, c.outcome, c.notes]);
     return { headers, rows };
   }
 
