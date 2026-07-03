@@ -38,16 +38,6 @@
     return !!getPinRecord();
   }
 
-  function removeOrphanedAccountData() {
-    const prefixPattern = /^(cardiacCases_enc|thoracicCases_enc|vascularCases_enc)::/;
-    Object.keys(localStorage)
-      .filter((k) => prefixPattern.test(k))
-      .forEach((k) => localStorage.removeItem(k));
-    localStorage.removeItem('caseLogAccounts');
-    localStorage.removeItem('caseLogAccount');
-    localStorage.removeItem('caseLogSessionName');
-  }
-
   async function deriveKey(code, saltBytes) {
     const enc = new TextEncoder();
     const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(code), 'PBKDF2', false, ['deriveKey']);
@@ -90,7 +80,6 @@
   }
 
   async function createPin(code) {
-    removeOrphanedAccountData();
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const key = await deriveKey(code, salt);
     const verifier = await encryptString(key, 'CASELOG_OK');
@@ -152,12 +141,12 @@
       .cla-gate {
         position: fixed; inset: 0; z-index: 1000;
         display: flex; align-items: center; justify-content: center;
-        background: var(--bg, #f5f5f7);
+        background: var(--bg, #ffffff);
         padding: 24px;
       }
       .cla-gate-card {
         background: var(--card, #fff);
-        border: 1px solid var(--border, #e5e5ea);
+        border: 1px solid var(--border, #e2e8f0);
         border-radius: 16px;
         padding: 32px;
         width: 300px;
@@ -168,11 +157,11 @@
       .cla-gate-card h2 {
         margin: 0 0 4px;
         font-size: 18px;
-        color: var(--text, #1d1d1f);
+        color: var(--text, #0f172a);
       }
       .cla-gate-sub {
         font-size: 12px;
-        color: var(--muted, #86868b);
+        color: var(--muted, #64748b);
         margin-bottom: 22px;
       }
       .cla-pin-row {
@@ -186,20 +175,20 @@
         height: 52px;
         text-align: center;
         font-size: 22px;
-        border: 1px solid var(--border, #e5e5ea);
+        border: 1px solid var(--border, #e2e8f0);
         border-radius: 8px;
         font-family: inherit;
         background: transparent;
-        color: var(--text, #1d1d1f);
+        color: var(--text, #0f172a);
       }
       .cla-pin-row input:focus {
         outline: none;
-        border-color: var(--accent, #333);
+        border-color: var(--accent, #e11d48);
       }
       .cla-pin-label {
         font-size: 12px;
         font-weight: 600;
-        color: var(--muted, #86868b);
+        color: var(--muted, #64748b);
         margin-bottom: 10px;
       }
       .cla-gate-error {
@@ -211,10 +200,10 @@
       .cla-gate-reset {
         margin-top: 4px;
         font-size: 12px;
-        color: var(--muted, #86868b);
+        color: var(--muted, #64748b);
       }
       .cla-gate-reset a {
-        color: var(--accent, #333);
+        color: var(--accent, #e11d48);
         text-decoration: none;
         font-weight: 600;
         cursor: pointer;
@@ -228,17 +217,17 @@
         align-items: center;
         gap: 8px;
         background: var(--card, #fff);
-        border: 1px solid var(--border, #e5e5ea);
+        border: 1px solid var(--border, #e2e8f0);
         border-radius: 999px;
         padding: 6px 12px;
         font-size: 12px;
-        color: var(--muted, #86868b);
+        color: var(--muted, #64748b);
         box-shadow: 0 4px 14px rgba(0,0,0,0.06);
       }
       .cla-badge button {
         background: none;
         border: none;
-        color: var(--accent, #333);
+        color: var(--accent, #e11d48);
         font-weight: 700;
         font-size: 12px;
         cursor: pointer;
@@ -381,6 +370,5 @@
     protect,
     encryptJSON,
     decryptJSON,
-    lock,
   };
 })();
