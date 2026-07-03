@@ -7,27 +7,31 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-32.png">
-<meta name="theme-color" content="#c0392b">
+<meta name="theme-color" content="#e11d48">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Cardiac Log">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     color-scheme: light dark;
-    --bg: #f5f5f7;
+    --bg: #ffffff;
     --card: #ffffff;
-    --text: #1d1d1f;
-    --accent: #c0392b;
-    --accent-dark: #a5281c;
-    --muted: #86868b;
-    --border: #e5e5ea;
+    --text: #0f172a;
+    --accent: #e11d48;
+    --accent-dark: #be123c;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --accent-tint: #fce7f3;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     min-height: 100vh;
     background: var(--bg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: var(--text);
     padding: 32px 16px;
   }
@@ -78,7 +82,7 @@
     border-radius: 12px;
     padding: 12px 18px;
     text-align: center;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
     min-width: 90px;
   }
   .stat .num { font-size: 20px; font-weight: 700; color: var(--accent); }
@@ -86,17 +90,18 @@
 
   .card {
     background: var(--card);
-    border-radius: 16px;
+    border-radius: 12px;
     padding: 24px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 1px solid var(--border);
     margin-bottom: 20px;
   }
   .card h2 {
-    font-size: 15px;
+    font-size: 12px;
+    font-weight: 700;
     margin: 0 0 16px;
-    color: var(--muted);
+    color: var(--accent);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
   }
   form {
     display: grid;
@@ -113,11 +118,57 @@
     font-size: 14px;
     outline: none;
     font-family: inherit;
-    background: transparent;
+    background: #f8fafc;
     color: inherit;
   }
+  input[type="checkbox"] { accent-color: var(--accent); }
   input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   textarea { resize: vertical; min-height: 44px; }
+  .collapsible-field {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .collapsible-field summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 11px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .collapsible-field summary::-webkit-details-marker { display: none; }
+  .collapsible-field summary::before {
+    content: '▸';
+    font-size: 10px;
+    color: var(--muted);
+    transition: transform 0.15s ease;
+  }
+  .collapsible-field[open] summary::before {
+    transform: rotate(90deg);
+  }
+  .collapsible-field[open] summary {
+    border-bottom: 1px solid var(--border);
+  }
+  .selected-count {
+    margin-left: auto;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 999px;
+    display: none;
+  }
+  .selected-count.has-selection {
+    display: inline-block;
+  }
+  .collapsible-field .procedure-groups {
+    border: none;
+    border-radius: 0;
+  }
   .procedure-groups {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -158,6 +209,44 @@
     font-size: 12px;
     margin-top: 4px;
   }
+  .graft-builder {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .graft-builder select {
+    flex: 1;
+  }
+  .graft-builder button {
+    flex: 0 0 auto;
+  }
+  .graft-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .graft-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-tint);
+    color: var(--accent-dark);
+    border-radius: 999px;
+    padding: 4px 6px 4px 12px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .graft-chip button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 6px;
+  }
+  .graft-chip button:hover {
+    color: var(--accent-dark);
+  }
   .actions {
     grid-column: 1 / -1;
     display: flex;
@@ -169,19 +258,19 @@
     background: var(--accent);
     color: white;
     border: none;
-    border-radius: 8px;
-    padding: 10px 18px;
+    border-radius: 6px;
+    padding: 12px 18px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
   }
   button:hover { background: var(--accent-dark); }
   button.secondary {
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
+    background: var(--accent-tint);
+    color: var(--accent);
+    border: none;
   }
-  button.secondary:hover { background: var(--bg); color: var(--text); }
+  button.secondary:hover { filter: brightness(0.97); }
 
   .filter-row {
     display: flex;
@@ -215,7 +304,7 @@
     border-radius: 999px;
     font-size: 11px;
     font-weight: 600;
-    background: #fbeaea;
+    background: #fce7f3;
     color: var(--accent-dark);
   }
   .row-actions button {
@@ -274,12 +363,13 @@
   }
   .dist-bar-wrap {
     flex: 1;
-    background: var(--bg);
+    background: #f1f5f9;
     border-radius: 4px;
     height: 6px;
     overflow: hidden;
   }
   .dist-bar {
+    display: block;
     height: 100%;
     background: var(--accent);
     border-radius: 4px;
@@ -321,6 +411,10 @@
         <input type="date" id="date" required>
       </div>
       <div class="field">
+        <label for="patientId">Patient ID Number</label>
+        <input type="text" id="patientId" placeholder="e.g. 123456">
+      </div>
+      <div class="field">
         <label for="urgency">Urgency</label>
         <select id="urgency" required>
           <option value="">Select...</option>
@@ -335,8 +429,11 @@
         <input type="text" id="diagnosisOtherText" class="procedure-other-input" placeholder="Describe diagnosis..." style="display:none;">
       </div>
       <div class="field full">
-        <label>Procedure(s) — select all that apply</label>
-        <div class="procedure-groups" id="procedureGroups"></div>
+        <details class="collapsible-field" id="procedureDetails">
+          <summary>Procedure(s) — select all that apply <span class="selected-count" id="procedureCount"></span></summary>
+          <div class="procedure-groups" id="procedureGroups"></div>
+        </details>
+        <div class="graft-list" id="procedureChips"></div>
         <div id="procedureError" class="field-error" style="display:none;">Select at least one procedure.</div>
       </div>
       <div class="field">
@@ -353,6 +450,13 @@
         <label for="surgeon">Attending Surgeon Initials</label>
         <input type="text" id="surgeon" placeholder="e.g. JD">
       </div>
+      <div class="field full">
+        <details class="collapsible-field">
+          <summary>Surgical Steps Performed (by you) — select all that apply <span class="selected-count" id="surgicalStepsCount"></span></summary>
+          <div class="procedure-groups" id="surgicalStepsGroups"></div>
+        </details>
+        <div class="graft-list" id="surgicalStepsChips"></div>
+      </div>
       <div class="field">
         <label for="exposure">Exposure Technique</label>
         <select id="exposure">
@@ -367,24 +471,12 @@
         </select>
         <input type="text" id="exposureOtherText" class="procedure-other-input" placeholder="Describe exposure..." style="display:none;">
       </div>
-      <div class="field">
-        <label for="cannulation">Cannulation Strategy</label>
-        <select id="cannulation">
-          <option value="">Select...</option>
-          <option>Ascending Aorta / Single Venous (RA)</option>
-          <option>Ascending Aorta / Bicaval</option>
-          <option>Ascending Aorta / Femoral Venous</option>
-          <option>Femoral Artery / Femoral Venous</option>
-          <option>Femoral Artery / Bicaval</option>
-          <option>Axillary Artery / Single Venous (RA)</option>
-          <option>Axillary Artery / Bicaval</option>
-          <option>Aortic Arch / Bicaval</option>
-          <option>Innominate Artery / Bicaval</option>
-          <option>Carotid / Bicaval</option>
-          <option>No CPB (Off-Pump)</option>
-          <option>Other</option>
-        </select>
-        <input type="text" id="cannulationOtherText" class="procedure-other-input" placeholder="Describe cannulation..." style="display:none;">
+      <div class="field full">
+        <details class="collapsible-field">
+          <summary>Cannulation Strategy — select all that apply <span class="selected-count" id="cannulationCount"></span></summary>
+          <div class="procedure-groups" id="cannulationGroups"></div>
+        </details>
+        <div class="graft-list" id="cannulationChips"></div>
       </div>
       <div class="field" id="valveTypeField">
         <label for="valveType">Valve Type / Prosthesis</label>
@@ -399,9 +491,32 @@
           <option>Other</option>
         </select>
       </div>
-      <div class="field" id="graftField">
-        <label for="grafts">Grafts / Conduits Used (CABG)</label>
-        <input type="text" id="grafts" placeholder="e.g. LIMA-LAD, SVG-OM, SVG-PDA">
+      <div class="field full" id="graftField">
+        <label>Grafts / Conduits Used (CABG)</label>
+        <div class="graft-builder">
+          <select id="graftType">
+            <option value="">Graft...</option>
+            <option>LIMA</option>
+            <option>RIMA</option>
+            <option>SVG</option>
+            <option>RA</option>
+          </select>
+          <select id="graftSite">
+            <option value="">Target...</option>
+            <option>RCA</option>
+            <option>LAD</option>
+            <option>D1</option>
+            <option>D2</option>
+            <option>PDA</option>
+            <option>Cx</option>
+            <option>Bx</option>
+            <option>M1</option>
+            <option>M2</option>
+            <option>M3</option>
+          </select>
+          <button type="button" class="secondary" id="addGraftBtn">Add</button>
+        </div>
+        <div class="graft-list" id="graftList"></div>
       </div>
       <div class="field">
         <label for="cardioplegia">Cardioplegia</label>
@@ -462,7 +577,7 @@
   <div class="card">
     <h2>Case History</h2>
     <div class="filter-row">
-      <input type="text" id="search" placeholder="Search surgeon, notes...">
+      <input type="text" id="search" placeholder="Search patient ID, surgeon, notes...">
       <select id="filterProcedure">
         <option value="">All Procedures</option>
       </select>
@@ -476,11 +591,13 @@
       <thead>
         <tr>
           <th>Date</th>
+          <th>Patient ID</th>
           <th>Urgency</th>
           <th>Diagnosis</th>
           <th>Procedure</th>
           <th>Role</th>
           <th>Surgeon</th>
+          <th>Steps Performed</th>
           <th>Exposure</th>
           <th>Cannulation</th>
           <th>Valve</th>
@@ -598,6 +715,40 @@ CaseLogAuth.protect(async function (authKey) {
   const procedureGroupsEl = document.getElementById('procedureGroups');
   const procedureErrorEl = document.getElementById('procedureError');
 
+  function updateSelectedCount(countElId, containerEl, checkboxClass) {
+    const countEl = document.getElementById(countElId);
+    if (!countEl) return;
+    const count = containerEl.querySelectorAll(`.${checkboxClass}:checked`).length;
+    countEl.textContent = count;
+    countEl.classList.toggle('has-selection', count > 0);
+  }
+
+  function renderSelectionChips(chipsElId, groupEl, checkboxClass, otherCheckboxId) {
+    const chipsEl = document.getElementById(chipsElId);
+    const boxes = [...groupEl.querySelectorAll(`.${checkboxClass}:checked`)];
+    const chips = boxes.map(cb => {
+      if (cb.id === otherCheckboxId) {
+        const otherTextEl = groupEl.querySelector('.procedure-other-input');
+        const text = otherTextEl ? otherTextEl.value.trim() : '';
+        return { label: text ? `Other: ${text}` : 'Other', cbId: cb.id };
+      }
+      return { label: cb.value, cbValue: cb.value };
+    });
+    chipsEl.innerHTML = chips.map((c, i) => `<span class="graft-chip">${c.label}<button type="button" data-idx="${i}">✕</button></span>`).join('');
+    chipsEl.querySelectorAll('button').forEach((btn, i) => {
+      btn.addEventListener('click', () => {
+        const chip = chips[i];
+        const cb = chip.cbId
+          ? document.getElementById(chip.cbId)
+          : [...groupEl.querySelectorAll(`.${checkboxClass}`)].find(el => el.value === chip.cbValue);
+        if (cb) {
+          cb.checked = false;
+          cb.dispatchEvent(new Event('change'));
+        }
+      });
+    });
+  }
+
   function buildProcedureGroups() {
     let html = '';
     PROCEDURE_GROUPS.forEach(group => {
@@ -643,8 +794,17 @@ CaseLogAuth.protect(async function (authKey) {
     procedureGroupsEl.innerHTML = html;
 
     procedureGroupsEl.querySelectorAll('.procedure-checkbox').forEach(cb => {
-      cb.addEventListener('change', updateConditionalFields);
+      cb.addEventListener('change', () => {
+        updateConditionalFields();
+        updateSelectedCount('procedureCount', procedureGroupsEl, 'procedure-checkbox');
+        renderSelectionChips('procedureChips', procedureGroupsEl, 'procedure-checkbox', 'procedureOtherCheck');
+      });
     });
+    document.getElementById('procedureOtherText').addEventListener('input', () => {
+      renderSelectionChips('procedureChips', procedureGroupsEl, 'procedure-checkbox', 'procedureOtherCheck');
+    });
+    updateSelectedCount('procedureCount', procedureGroupsEl, 'procedure-checkbox');
+    renderSelectionChips('procedureChips', procedureGroupsEl, 'procedure-checkbox', 'procedureOtherCheck');
   }
 
   function getSelectedProcedures() {
@@ -671,6 +831,8 @@ CaseLogAuth.protect(async function (authKey) {
   function resetProcedureGroups() {
     procedureGroupsEl.querySelectorAll('.procedure-checkbox').forEach(cb => cb.checked = false);
     document.getElementById('procedureOtherText').value = '';
+    updateSelectedCount('procedureCount', procedureGroupsEl, 'procedure-checkbox');
+    renderSelectionChips('procedureChips', procedureGroupsEl, 'procedure-checkbox', 'procedureOtherCheck');
   }
 
   async function save() {
@@ -682,7 +844,7 @@ CaseLogAuth.protect(async function (authKey) {
     if (outcome === 'Minor Complication') return '#fff4e0;color:#a86a00';
     if (outcome === 'Major Complication' || outcome === 'Reoperation Required') return '#fdeaea;color:#b3261e';
     if (outcome === 'Mortality') return '#eee;color:#333';
-    return '#fbeaea;color:#a5281c';
+    return '#fce7f3;color:#be123c';
   }
 
   function updateProcedureFilter() {
@@ -741,18 +903,23 @@ CaseLogAuth.protect(async function (authKey) {
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   }
 
+  const CHART_COLORS = ['#9f1239', '#e11d48', '#f43f5e', '#fb7185', '#fda4af', '#be123c'];
+
   function renderDistributionBlock(title, entries) {
     if (entries.length === 0) {
       return `<div class="stat-block"><h3>${title}</h3><div class="stat-block-empty">No data yet.</div></div>`;
     }
     const max = Math.max(...entries.map(([, count]) => count));
-    const rows = entries.map(([label, count]) => `
+    const rows = entries.map(([label, count], i) => {
+      const color = CHART_COLORS[i % CHART_COLORS.length];
+      return `
       <div class="dist-row">
         <span class="dist-label">${label}</span>
-        <span class="dist-bar-wrap"><span class="dist-bar" style="width:${(count / max) * 100}%"></span></span>
-        <span class="dist-count">${count}</span>
+        <span class="dist-bar-wrap"><span class="dist-bar" style="width:${(count / max) * 100}%;background:${color}"></span></span>
+        <span class="dist-count" style="color:${color}">${count}</span>
       </div>
-    `).join('');
+    `;
+    }).join('');
     return `<div class="stat-block"><h3>${title}</h3>${rows}</div>`;
   }
 
@@ -787,8 +954,9 @@ CaseLogAuth.protect(async function (authKey) {
       renderDistributionBlock('Diagnosis', tally(c => c.diagnosis)),
       renderDistributionBlock('Procedures', tally(c => c.procedures || [])),
       renderDistributionBlock('Role', tally(c => c.role)),
+      renderDistributionBlock('Surgical Steps Performed', tally(c => c.surgicalSteps || [])),
       renderDistributionBlock('Exposure Technique', tally(c => c.exposure)),
-      renderDistributionBlock('Cannulation Strategy', tally(c => c.cannulation)),
+      renderDistributionBlock('Cannulation Strategy', tally(c => c.cannulation || [])),
       renderDistributionBlock('Valve Type', tally(c => c.valveType)),
       renderDistributionBlock('Cardioplegia', tally(c => c.cardioplegia)),
       renderDistributionBlock('Outcome', tally(c => c.outcome)),
@@ -806,7 +974,7 @@ CaseLogAuth.protect(async function (authKey) {
       .filter(c => {
         if (procFilter && !(c.procedures || []).includes(procFilter)) return false;
         if (!q) return true;
-        return [c.surgeon, c.notes, c.urgency, c.diagnosis, ...(c.procedures || []), c.exposure, c.cannulation, c.valveType, c.grafts, c.cardioplegia]
+        return [c.patientId, c.surgeon, c.notes, c.urgency, c.diagnosis, ...(c.procedures || []), ...(c.surgicalSteps || []), c.exposure, ...(c.cannulation || []), c.valveType, ...graftsArray(c), c.cardioplegia]
           .join(' ').toLowerCase().includes(q);
       })
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -819,15 +987,17 @@ CaseLogAuth.protect(async function (authKey) {
       const style = outcomeBadgeColor(c.outcome);
       tr.innerHTML = `
         <td>${c.date || ''}</td>
+        <td>${c.patientId || '—'}</td>
         <td>${c.urgency || '—'}</td>
         <td>${c.diagnosis || '—'}</td>
         <td>${(c.procedures || []).join(', ') || ''}</td>
         <td>${c.role || '—'}</td>
         <td>${c.surgeon || ''}</td>
+        <td>${(c.surgicalSteps || []).join(', ') || '—'}</td>
         <td>${c.exposure || '—'}</td>
-        <td>${c.cannulation || '—'}</td>
+        <td>${(c.cannulation || []).join(', ') || '—'}</td>
         <td>${c.valveType || '—'}</td>
-        <td>${c.grafts || '—'}</td>
+        <td>${graftsArray(c).join(', ') || '—'}</td>
         <td>${c.cardioplegia || '—'}</td>
         <td>${c.cpbTime ? c.cpbTime + ' min' : '—'}</td>
         <td>${c.clampTime ? c.clampTime + ' min' : '—'}</td>
@@ -847,6 +1017,7 @@ CaseLogAuth.protect(async function (authKey) {
 
     tableBody.querySelectorAll('.delete').forEach(btn => {
       btn.addEventListener('click', async () => {
+        if (!confirm('Delete this case? This cannot be undone.')) return;
         if (editingIndex === Number(btn.dataset.idx)) stopEdit();
         cases.splice(Number(btn.dataset.idx), 1);
         await save();
@@ -864,6 +1035,53 @@ CaseLogAuth.protect(async function (authKey) {
   function updateConditionalFields() {
     valveTypeField.style.display = isAnySelectedValve() ? '' : 'none';
     graftField.style.display = isCabgSelected() ? '' : 'none';
+  }
+
+  let currentGrafts = [];
+  const graftTypeEl = document.getElementById('graftType');
+  const graftSiteEl = document.getElementById('graftSite');
+  const graftListEl = document.getElementById('graftList');
+
+  function graftsArray(c) {
+    if (Array.isArray(c.grafts)) return c.grafts;
+    if (typeof c.grafts === 'string' && c.grafts) return c.grafts.split(',').map(s => s.trim()).filter(Boolean);
+    return [];
+  }
+
+  function renderGraftList() {
+    graftListEl.innerHTML = currentGrafts.map((g, i) => `
+      <span class="graft-chip">${g}<button type="button" data-idx="${i}">✕</button></span>
+    `).join('');
+    graftListEl.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentGrafts.splice(Number(btn.dataset.idx), 1);
+        renderGraftList();
+      });
+    });
+  }
+
+  document.getElementById('addGraftBtn').addEventListener('click', () => {
+    const type = graftTypeEl.value;
+    const site = graftSiteEl.value;
+    if (!type || !site) return;
+    currentGrafts.push(`${type}-${site}`);
+    graftTypeEl.value = '';
+    graftSiteEl.value = '';
+    renderGraftList();
+  });
+
+  function resetGraftBuilder() {
+    currentGrafts = [];
+    graftTypeEl.value = '';
+    graftSiteEl.value = '';
+    renderGraftList();
+  }
+
+  function populateGraftBuilder(c) {
+    currentGrafts = graftsArray(c);
+    graftTypeEl.value = '';
+    graftSiteEl.value = '';
+    renderGraftList();
   }
 
   const exposureSelectEl = document.getElementById('exposure');
@@ -889,27 +1107,227 @@ CaseLogAuth.protect(async function (authKey) {
     exposureOtherTextEl.style.display = 'none';
   }
 
-  const cannulationSelectEl = document.getElementById('cannulation');
-  const cannulationOtherTextEl = document.getElementById('cannulationOtherText');
+  const CANNULATION_GROUPS = [
+    { category: 'Arterial Cannulation', items: [
+      'Ascending Aorta', 'Aortic Arch', 'Femoral Artery', 'Innominate Artery', 'Axillary Artery', 'Left Carotid Artery', 'Right Carotid Artery'
+    ] },
+    { category: 'Venous Cannulation', items: [
+      'Single Venous (RA)', 'Bicaval', 'Femoral Vein'
+    ] },
+    { category: 'No CPB (Off-Pump)', items: null },
+  ];
 
-  cannulationSelectEl.addEventListener('change', () => {
-    const isOther = cannulationSelectEl.value === 'Other';
-    cannulationOtherTextEl.style.display = isOther ? '' : 'none';
-    if (!isOther) cannulationOtherTextEl.value = '';
-  });
+  const cannulationGroupsEl = document.getElementById('cannulationGroups');
 
-  function getSelectedCannulation() {
-    const value = cannulationSelectEl.value;
-    if (value === 'Other') {
-      const text = cannulationOtherTextEl.value.trim();
-      return text ? `Other: ${text}` : 'Other';
-    }
-    return value;
+  function buildCannulationGroups() {
+    let html = '';
+    CANNULATION_GROUPS.forEach(group => {
+      if (group.items) {
+        html += `
+          <div class="procedure-category">
+            <div class="procedure-category-title">${group.category}</div>
+            <div class="procedure-options">
+              ${group.items.map(item => `
+                <label>
+                  <input type="checkbox" class="cannulation-checkbox" value="${item}">
+                  ${item}
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="procedure-category">
+            <div class="procedure-options">
+              <label class="procedure-bold">
+                <input type="checkbox" class="cannulation-checkbox" value="${group.category}">
+                ${group.category}
+              </label>
+            </div>
+          </div>
+        `;
+      }
+    });
+    html += `
+      <div class="procedure-category">
+        <div class="procedure-options">
+          <label class="procedure-bold">
+            <input type="checkbox" id="cannulationOtherCheck" class="cannulation-checkbox" value="Other">
+            Other
+          </label>
+          <input type="text" id="cannulationOtherText" class="procedure-other-input" placeholder="Describe cannulation..." style="display:none;">
+        </div>
+      </div>
+    `;
+    cannulationGroupsEl.innerHTML = html;
+
+    document.getElementById('cannulationOtherCheck').addEventListener('change', (e) => {
+      const otherText = document.getElementById('cannulationOtherText');
+      otherText.style.display = e.target.checked ? '' : 'none';
+      if (!e.target.checked) otherText.value = '';
+    });
+
+    cannulationGroupsEl.querySelectorAll('.cannulation-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        updateSelectedCount('cannulationCount', cannulationGroupsEl, 'cannulation-checkbox');
+        renderSelectionChips('cannulationChips', cannulationGroupsEl, 'cannulation-checkbox', 'cannulationOtherCheck');
+      });
+    });
+    document.getElementById('cannulationOtherText').addEventListener('input', () => {
+      renderSelectionChips('cannulationChips', cannulationGroupsEl, 'cannulation-checkbox', 'cannulationOtherCheck');
+    });
+    updateSelectedCount('cannulationCount', cannulationGroupsEl, 'cannulation-checkbox');
+    renderSelectionChips('cannulationChips', cannulationGroupsEl, 'cannulation-checkbox', 'cannulationOtherCheck');
   }
 
-  function resetCannulationField() {
-    cannulationOtherTextEl.value = '';
-    cannulationOtherTextEl.style.display = 'none';
+  function getSelectedCannulation() {
+    const boxes = [...cannulationGroupsEl.querySelectorAll('.cannulation-checkbox:checked')];
+    return boxes.map(cb => {
+      if (cb.value === 'Other') {
+        const text = document.getElementById('cannulationOtherText').value.trim();
+        return text ? `Other: ${text}` : 'Other';
+      }
+      return cb.value;
+    });
+  }
+
+  function resetCannulationGroups() {
+    cannulationGroupsEl.querySelectorAll('.cannulation-checkbox').forEach(cb => cb.checked = false);
+    const otherText = document.getElementById('cannulationOtherText');
+    otherText.value = '';
+    otherText.style.display = 'none';
+    updateSelectedCount('cannulationCount', cannulationGroupsEl, 'cannulation-checkbox');
+    renderSelectionChips('cannulationChips', cannulationGroupsEl, 'cannulation-checkbox', 'cannulationOtherCheck');
+  }
+
+  function populateCannulationCheckboxes(cannulation) {
+    cannulationGroupsEl.querySelectorAll('.cannulation-checkbox').forEach(cb => cb.checked = false);
+    const otherText = document.getElementById('cannulationOtherText');
+    otherText.value = '';
+    otherText.style.display = 'none';
+    (cannulation || []).forEach(v => {
+      if (v.startsWith('Other:')) {
+        document.getElementById('cannulationOtherCheck').checked = true;
+        otherText.value = v.slice(6).trim();
+        otherText.style.display = '';
+      } else if (v === 'Other') {
+        document.getElementById('cannulationOtherCheck').checked = true;
+        otherText.style.display = '';
+      } else {
+        const cb = [...cannulationGroupsEl.querySelectorAll('.cannulation-checkbox')].find(el => el.value === v);
+        if (cb) cb.checked = true;
+      }
+    });
+    updateSelectedCount('cannulationCount', cannulationGroupsEl, 'cannulation-checkbox');
+    renderSelectionChips('cannulationChips', cannulationGroupsEl, 'cannulation-checkbox', 'cannulationOtherCheck');
+  }
+
+  const SURGICAL_STEPS_GROUPS = [
+    { category: 'Preparation & Access', items: [
+      'Patient Positioning & Prepping', 'Sternotomy', 'Saphenous Vein Harvest', 'Radial Artery Harvest', 'Internal Mammary Artery Harvest', 'Pericardiotomy'
+    ] },
+    { category: 'Bypass Initiation', items: [
+      'Cannulation', 'Initiation of Cardiopulmonary Bypass', 'Aortic Cross-Clamping', 'Cardioplegia Administration'
+    ] },
+    { category: 'Repair / Reconstruction', items: [
+      'Aortotomy / Atriotomy', 'Distal Coronary Anastomosis', 'Proximal Coronary Anastomosis', 'Native Valve Excision / Debridement',
+      'Aortic Valve Repair', 'Aortic Prosthetic Valve Placement', 'Mitral Valve Repair', 'Mitral Prosthetic Valve Placement', 'Tricuspid Valve Repair / Replacement'
+    ] },
+    { category: 'Weaning & Closure', items: [
+      'De-airing', 'Cross-Clamp Removal', 'Weaning from Cardiopulmonary Bypass', 'Decannulation', 'Hemostasis',
+      'Pacemaker Placement', 'Drain Placement', 'Sternal Closure', 'Skin Closure'
+    ] },
+  ];
+
+  const surgicalStepsGroupsEl = document.getElementById('surgicalStepsGroups');
+
+  function buildSurgicalStepsGroups() {
+    let html = SURGICAL_STEPS_GROUPS.map(group => `
+      <div class="procedure-category">
+        <div class="procedure-category-title">${group.category}</div>
+        <div class="procedure-options">
+          ${group.items.map(step => `
+            <label>
+              <input type="checkbox" class="surgical-step-checkbox" value="${step}">
+              ${step}
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+    html += `
+      <div class="procedure-category">
+        <div class="procedure-options">
+          <label class="procedure-bold">
+            <input type="checkbox" id="surgicalStepOtherCheck" class="surgical-step-checkbox" value="Other">
+            Other
+          </label>
+          <input type="text" id="surgicalStepOtherText" class="procedure-other-input" placeholder="Describe step..." style="display:none;">
+        </div>
+      </div>
+    `;
+    surgicalStepsGroupsEl.innerHTML = html;
+
+    document.getElementById('surgicalStepOtherCheck').addEventListener('change', (e) => {
+      const otherText = document.getElementById('surgicalStepOtherText');
+      otherText.style.display = e.target.checked ? '' : 'none';
+      if (!e.target.checked) otherText.value = '';
+    });
+
+    surgicalStepsGroupsEl.querySelectorAll('.surgical-step-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        updateSelectedCount('surgicalStepsCount', surgicalStepsGroupsEl, 'surgical-step-checkbox');
+        renderSelectionChips('surgicalStepsChips', surgicalStepsGroupsEl, 'surgical-step-checkbox', 'surgicalStepOtherCheck');
+      });
+    });
+    document.getElementById('surgicalStepOtherText').addEventListener('input', () => {
+      renderSelectionChips('surgicalStepsChips', surgicalStepsGroupsEl, 'surgical-step-checkbox', 'surgicalStepOtherCheck');
+    });
+    updateSelectedCount('surgicalStepsCount', surgicalStepsGroupsEl, 'surgical-step-checkbox');
+    renderSelectionChips('surgicalStepsChips', surgicalStepsGroupsEl, 'surgical-step-checkbox', 'surgicalStepOtherCheck');
+  }
+
+  function getSelectedSurgicalSteps() {
+    const boxes = [...surgicalStepsGroupsEl.querySelectorAll('.surgical-step-checkbox:checked')];
+    return boxes.map(cb => {
+      if (cb.value === 'Other') {
+        const text = document.getElementById('surgicalStepOtherText').value.trim();
+        return text ? `Other: ${text}` : 'Other';
+      }
+      return cb.value;
+    });
+  }
+
+  function resetSurgicalStepsGroups() {
+    surgicalStepsGroupsEl.querySelectorAll('.surgical-step-checkbox').forEach(cb => cb.checked = false);
+    const otherText = document.getElementById('surgicalStepOtherText');
+    otherText.value = '';
+    otherText.style.display = 'none';
+    updateSelectedCount('surgicalStepsCount', surgicalStepsGroupsEl, 'surgical-step-checkbox');
+    renderSelectionChips('surgicalStepsChips', surgicalStepsGroupsEl, 'surgical-step-checkbox', 'surgicalStepOtherCheck');
+  }
+
+  function populateSurgicalStepsCheckboxes(steps) {
+    surgicalStepsGroupsEl.querySelectorAll('.surgical-step-checkbox').forEach(cb => cb.checked = false);
+    const otherText = document.getElementById('surgicalStepOtherText');
+    otherText.value = '';
+    otherText.style.display = 'none';
+    (steps || []).forEach(v => {
+      if (v.startsWith('Other:')) {
+        document.getElementById('surgicalStepOtherCheck').checked = true;
+        otherText.value = v.slice(6).trim();
+        otherText.style.display = '';
+      } else if (v === 'Other') {
+        document.getElementById('surgicalStepOtherCheck').checked = true;
+        otherText.style.display = '';
+      } else {
+        const cb = [...surgicalStepsGroupsEl.querySelectorAll('.surgical-step-checkbox')].find(el => el.value === v);
+        if (cb) cb.checked = true;
+      }
+    });
+    updateSelectedCount('surgicalStepsCount', surgicalStepsGroupsEl, 'surgical-step-checkbox');
+    renderSelectionChips('surgicalStepsChips', surgicalStepsGroupsEl, 'surgical-step-checkbox', 'surgicalStepOtherCheck');
   }
 
   const submitBtn = document.getElementById('submitBtn');
@@ -946,6 +1364,8 @@ CaseLogAuth.protect(async function (authKey) {
       }
     });
     updateConditionalFields();
+    updateSelectedCount('procedureCount', procedureGroupsEl, 'procedure-checkbox');
+    renderSelectionChips('procedureChips', procedureGroupsEl, 'procedure-checkbox', 'procedureOtherCheck');
   }
 
   function startEdit(idx) {
@@ -953,15 +1373,17 @@ CaseLogAuth.protect(async function (authKey) {
     if (!c) return;
     editingIndex = idx;
     document.getElementById('date').value = c.date || '';
+    document.getElementById('patientId').value = c.patientId || '';
     document.getElementById('urgency').value = c.urgency || '';
     setSelectWithOther(diagnosisSelectEl, diagnosisOtherTextEl, c.diagnosis);
     populateProcedureCheckboxes(c.procedures);
     document.getElementById('role').value = c.role || '';
     document.getElementById('surgeon').value = c.surgeon || '';
+    populateSurgicalStepsCheckboxes(c.surgicalSteps);
     setSelectWithOther(exposureSelectEl, exposureOtherTextEl, c.exposure);
-    setSelectWithOther(cannulationSelectEl, cannulationOtherTextEl, c.cannulation);
+    populateCannulationCheckboxes(c.cannulation);
     document.getElementById('valveType').value = c.valveType || '';
-    document.getElementById('grafts').value = c.grafts || '';
+    populateGraftBuilder(c);
     document.getElementById('cardioplegia').value = c.cardioplegia || '';
     document.getElementById('cpbTime').value = c.cpbTime || '';
     document.getElementById('clampTime').value = c.clampTime || '';
@@ -974,6 +1396,9 @@ CaseLogAuth.protect(async function (authKey) {
     submitBtn.textContent = 'Update Case';
     cancelEditBtn.style.display = '';
     formHeading.textContent = 'Edit Case';
+    procedureGroupsEl.closest('details').open = (c.procedures || []).length > 0;
+    cannulationGroupsEl.closest('details').open = (c.cannulation || []).length > 0;
+    surgicalStepsGroupsEl.closest('details').open = (c.surgicalSteps || []).length > 0;
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -982,8 +1407,13 @@ CaseLogAuth.protect(async function (authKey) {
     form.reset();
     resetProcedureGroups();
     resetDiagnosisGroups();
+    resetSurgicalStepsGroups();
     resetExposureField();
-    resetCannulationField();
+    resetCannulationGroups();
+    resetGraftBuilder();
+    procedureGroupsEl.closest('details').open = false;
+    cannulationGroupsEl.closest('details').open = false;
+    surgicalStepsGroupsEl.closest('details').open = false;
     document.getElementById('date').value = new Date().toISOString().slice(0, 10);
     updateConditionalFields();
     submitBtn.textContent = 'Add Case';
@@ -998,21 +1428,24 @@ CaseLogAuth.protect(async function (authKey) {
     const procedures = getSelectedProcedures();
     if (procedures.length === 0) {
       procedureErrorEl.style.display = 'block';
+      procedureGroupsEl.closest('details').open = true;
       return;
     }
     procedureErrorEl.style.display = 'none';
 
     const caseData = {
       date: document.getElementById('date').value,
+      patientId: document.getElementById('patientId').value.trim(),
       urgency: document.getElementById('urgency').value,
       diagnosis: getSelectedDiagnosis(),
       procedures: procedures,
       role: document.getElementById('role').value,
       surgeon: document.getElementById('surgeon').value.trim(),
+      surgicalSteps: getSelectedSurgicalSteps(),
       exposure: getSelectedExposure(),
       cannulation: getSelectedCannulation(),
       valveType: document.getElementById('valveType').value,
-      grafts: document.getElementById('grafts').value.trim(),
+      grafts: [...currentGrafts],
       cardioplegia: document.getElementById('cardioplegia').value,
       cpbTime: document.getElementById('cpbTime').value,
       clampTime: document.getElementById('clampTime').value,
@@ -1040,8 +1473,8 @@ CaseLogAuth.protect(async function (authKey) {
   filterProcedure.addEventListener('change', render);
 
   function getExportTable() {
-    const headers = ['Date', 'Urgency', 'Diagnosis', 'Procedure(s)', 'Role', 'Surgeon', 'Exposure', 'Cannulation', 'Valve Type', 'Grafts', 'Cardioplegia', 'CPB Time (min)', 'Cross-Clamp Time (min)', 'Circulatory Arrest Time (min)', 'Estimated Blood Loss (mL)', 'Lowest Core Temperature (°C)', 'Outcome', 'Notes'];
-    const rows = cases.map(c => [c.date, c.urgency, c.diagnosis, (c.procedures || []).join('; '), c.role, c.surgeon, c.exposure, c.cannulation, c.valveType, c.grafts, c.cardioplegia, c.cpbTime, c.clampTime, c.arrestTime, c.bloodLoss, c.temperature, c.outcome, c.notes]);
+    const headers = ['Date', 'Patient ID', 'Urgency', 'Diagnosis', 'Procedure(s)', 'Role', 'Surgeon', 'Surgical Steps Performed', 'Exposure', 'Cannulation', 'Valve Type', 'Grafts', 'Cardioplegia', 'CPB Time (min)', 'Cross-Clamp Time (min)', 'Circulatory Arrest Time (min)', 'Estimated Blood Loss (mL)', 'Lowest Core Temperature (°C)', 'Outcome', 'Notes'];
+    const rows = cases.map(c => [c.date, c.patientId, c.urgency, c.diagnosis, (c.procedures || []).join('; '), c.role, c.surgeon, (c.surgicalSteps || []).join('; '), c.exposure, (c.cannulation || []).join('; '), c.valveType, graftsArray(c).join('; '), c.cardioplegia, c.cpbTime, c.clampTime, c.arrestTime, c.bloodLoss, c.temperature, c.outcome, c.notes]);
     return { headers, rows };
   }
 
@@ -1084,8 +1517,24 @@ CaseLogAuth.protect(async function (authKey) {
     }
   });
 
+  function collapseOpenSections(target) {
+    document.querySelectorAll('details.collapsible-field[open]').forEach(d => {
+      const field = d.closest('.field');
+      if (!field || !field.contains(target)) d.open = false;
+    });
+  }
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.row-actions')) return;
+    collapseOpenSections(e.target);
+  });
+  document.addEventListener('focusin', (e) => {
+    collapseOpenSections(e.target);
+  });
+
   buildDiagnosisGroups();
   buildProcedureGroups();
+  buildCannulationGroups();
+  buildSurgicalStepsGroups();
   document.getElementById('date').value = new Date().toISOString().slice(0, 10);
   updateConditionalFields();
   updateProcedureFilter();
