@@ -405,6 +405,18 @@
         <input type="text" id="patientId" placeholder="e.g. 123456">
       </div>
       <div class="field">
+        <label for="sex">Sex</label>
+        <select id="sex">
+          <option value="">Select...</option>
+          <option>Male</option>
+          <option>Female</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="age">Age</label>
+        <input type="number" id="age" min="0" max="120" placeholder="e.g. 65">
+      </div>
+      <div class="field">
         <label for="urgency">Urgency</label>
         <select id="urgency" required>
           <option value="">Select...</option>
@@ -553,6 +565,8 @@
         <tr>
           <th>Date</th>
           <th>Patient ID</th>
+          <th>Sex</th>
+          <th>Age</th>
           <th>Urgency</th>
           <th>Diagnosis</th>
           <th>Procedure</th>
@@ -892,6 +906,7 @@ CaseLogAuth.protect(async function (authKey) {
 
   function renderTimeBlock() {
     const specs = [
+      { field: 'age', label: 'Patient Age', unit: 'yrs' },
       { field: 'cpbTime', label: 'Procedure Time', unit: 'min' },
       { field: 'clampTime', label: 'Fluoroscopy Time', unit: 'min' },
       { field: 'arrestTime', label: 'Clamp / Occlusion Time', unit: 'min' },
@@ -918,6 +933,7 @@ CaseLogAuth.protect(async function (authKey) {
   function buildFieldStats() {
     const blocks = [
       renderDistributionBlock('Urgency', tally(c => c.urgency)),
+      renderDistributionBlock('Sex', tally(c => c.sex)),
       renderDistributionBlock('Diagnosis', tally(c => c.diagnosis)),
       renderDistributionBlock('Procedures', tally(c => c.procedures || [])),
       renderDistributionBlock('Role', tally(c => c.role)),
@@ -954,6 +970,8 @@ CaseLogAuth.protect(async function (authKey) {
       tr.innerHTML = `
         <td>${c.date || ''}</td>
         <td>${c.patientId || '—'}</td>
+        <td>${c.sex || '—'}</td>
+        <td>${c.age || '—'}</td>
         <td>${c.urgency || '—'}</td>
         <td>${c.diagnosis || '—'}</td>
         <td>${(c.procedures || []).join(', ') || ''}</td>
@@ -1092,6 +1110,8 @@ CaseLogAuth.protect(async function (authKey) {
     editingIndex = idx;
     document.getElementById('date').value = c.date || '';
     document.getElementById('patientId').value = c.patientId || '';
+    document.getElementById('sex').value = c.sex || '';
+    document.getElementById('age').value = c.age || '';
     document.getElementById('urgency').value = c.urgency || '';
     setSelectWithOther(diagnosisSelectEl, diagnosisOtherTextEl, c.diagnosis);
     populateProcedureCheckboxes(c.procedures);
@@ -1147,6 +1167,8 @@ CaseLogAuth.protect(async function (authKey) {
     const caseData = {
       date: document.getElementById('date').value,
       patientId: document.getElementById('patientId').value.trim(),
+      sex: document.getElementById('sex').value,
+      age: document.getElementById('age').value,
       urgency: document.getElementById('urgency').value,
       diagnosis: getSelectedDiagnosis(),
       procedures: procedures,
@@ -1183,8 +1205,8 @@ CaseLogAuth.protect(async function (authKey) {
   filterProcedure.addEventListener('change', render);
 
   function getExportTable() {
-    const headers = ['Date', 'Patient ID', 'Urgency', 'Diagnosis', 'Procedure(s)', 'Role', 'Surgeon', 'Approach', 'Access Site', 'Graft/Stent Type', 'Conduit Used', 'Completion Imaging', 'Procedure Time (min)', 'Fluoroscopy Time (min)', 'Clamp/Occlusion Time (min)', 'Estimated Blood Loss (mL)', 'Lowest Core Temperature (°C)', 'Outcome', 'Notes'];
-    const rows = cases.map(c => [c.date, c.patientId, c.urgency, c.diagnosis, (c.procedures || []).join('; '), c.role, c.surgeon, c.exposure, c.cannulation, c.valveType, c.grafts, c.cardioplegia, c.cpbTime, c.clampTime, c.arrestTime, c.bloodLoss, c.temperature, c.outcome, c.notes]);
+    const headers = ['Date', 'Patient ID', 'Sex', 'Age', 'Urgency', 'Diagnosis', 'Procedure(s)', 'Role', 'Surgeon', 'Approach', 'Access Site', 'Graft/Stent Type', 'Conduit Used', 'Completion Imaging', 'Procedure Time (min)', 'Fluoroscopy Time (min)', 'Clamp/Occlusion Time (min)', 'Estimated Blood Loss (mL)', 'Lowest Core Temperature (°C)', 'Outcome', 'Notes'];
+    const rows = cases.map(c => [c.date, c.patientId, c.sex, c.age, c.urgency, c.diagnosis, (c.procedures || []).join('; '), c.role, c.surgeon, c.exposure, c.cannulation, c.valveType, c.grafts, c.cardioplegia, c.cpbTime, c.clampTime, c.arrestTime, c.bloodLoss, c.temperature, c.outcome, c.notes]);
     return { headers, rows };
   }
 
