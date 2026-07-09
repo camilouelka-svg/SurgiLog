@@ -415,6 +415,18 @@
         <input type="text" id="patientId" placeholder="e.g. 123456">
       </div>
       <div class="field">
+        <label for="sex">Sex</label>
+        <select id="sex">
+          <option value="">Select...</option>
+          <option>Male</option>
+          <option>Female</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="age">Age</label>
+        <input type="number" id="age" min="0" max="120" placeholder="e.g. 65">
+      </div>
+      <div class="field">
         <label for="urgency">Urgency</label>
         <select id="urgency" required>
           <option value="">Select...</option>
@@ -423,10 +435,12 @@
           <option>Elective</option>
         </select>
       </div>
-      <div class="field">
-        <label for="diagnosis">Diagnosis</label>
-        <select id="diagnosis"></select>
-        <input type="text" id="diagnosisOtherText" class="procedure-other-input" placeholder="Describe diagnosis..." style="display:none;">
+      <div class="field full">
+        <details class="collapsible-field">
+          <summary>Diagnosis — select all that apply <span class="selected-count" id="diagnosisCount"></span></summary>
+          <div class="procedure-groups" id="diagnosisGroups"></div>
+        </details>
+        <div class="graft-list" id="diagnosisChips"></div>
       </div>
       <div class="field full">
         <details class="collapsible-field" id="procedureDetails">
@@ -592,6 +606,8 @@
         <tr>
           <th>Date</th>
           <th>Patient ID</th>
+          <th>Sex</th>
+          <th>Age</th>
           <th>Urgency</th>
           <th>Diagnosis</th>
           <th>Procedure</th>
@@ -663,51 +679,133 @@ CaseLogAuth.protect(async function (authKey) {
     { category: 'Tricuspid valve', valveRelated: true, items: [
       'Tricuspid Valve Repair', 'Tricuspid Valve Replacement'
     ] },
-    { category: 'Arrhythmia Surgery', valveRelated: false, items: ['Pulmonary Vein Isolation'] },
+    { category: 'Arrhythmia Surgery', valveRelated: false, items: ['Pulmonary Vein Isolation', 'Maze Procedure', 'LAA Excision', 'LAA Closure'] },
     { category: 'Heart failure surgery', valveRelated: false, items: ['LVAD Implant', 'Heart Transplant'] },
     { category: 'Congenital heart surgery', valveRelated: false, items: null },
     { category: 'Cardiac tumor excision', valveRelated: false, items: null },
   ];
 
-  const DIAGNOSIS_OPTIONS = [
-    'CAD', 'CAD + Valvular disease',
-    'Aortic stenosis', 'Aortic insufficiency',
-    'Type A aortic dissection',
-    'Mitral stenosis', 'Mitral insufficiency',
-    'Tricuspid insufficiency',
-    'Heart failure',
-    'Heart tumor',
-    'Endocarditis',
+  const DIAGNOSIS_GROUPS = [
+    { category: 'CAD', items: ['Chronic CAD', 'Unstable Angina', 'NSTEMI', 'STEMI'] },
+    { category: 'Aortic valve', items: ['Aortic Stenosis', 'Aortic Insufficiency'] },
+    { category: 'Mitral valve', items: ['Mitral Stenosis', 'Mitral Insufficiency'] },
+    { category: 'Tricuspid valve', items: ['Tricuspid Insufficiency'] },
+    { category: 'Thoracic Aorta', items: ['Type A Aortic Dissection', 'Ascending Aorta Aneurysm', 'Aortic Root Aneurysm'] },
+    { category: 'Endocarditis', items: ['Aortic Endocarditis', 'Mitral Endocarditis', 'Tricuspid Endocarditis', 'Pulmonary Endocarditis'] },
+    { category: 'Heart Failure', items: null },
+    { category: 'Heart Tumor', items: null },
   ];
 
-  const diagnosisSelectEl = document.getElementById('diagnosis');
-  const diagnosisOtherTextEl = document.getElementById('diagnosisOtherText');
+  const diagnosisGroupsEl = document.getElementById('diagnosisGroups');
+
+  function diagnosisArray(c) {
+    if (Array.isArray(c.diagnosis)) return c.diagnosis;
+    if (typeof c.diagnosis === 'string' && c.diagnosis) return [c.diagnosis];
+    return [];
+  }
 
   function buildDiagnosisGroups() {
-    diagnosisSelectEl.innerHTML = '<option value="">Select...</option>' +
-      DIAGNOSIS_OPTIONS.map(item => `<option>${item}</option>`).join('') +
-      '<option value="Other">Other</option>';
+    let html = '';
+    DIAGNOSIS_GROUPS.forEach(group => {
+      if (group.items) {
+        html += `
+          <div class="procedure-category">
+            <div class="procedure-category-title">${group.category}</div>
+            <div class="procedure-options">
+              ${group.items.map(item => `
+                <label>
+                  <input type="checkbox" class="diagnosis-checkbox" value="${item}">
+                  ${item}
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="procedure-category">
+            <div class="procedure-options">
+              <label class="procedure-bold">
+                <input type="checkbox" class="diagnosis-checkbox" value="${group.category}">
+                ${group.category}
+              </label>
+            </div>
+          </div>
+        `;
+      }
+    });
+    html += `
+      <div class="procedure-category">
+        <div class="procedure-options">
+          <label class="procedure-bold">
+            <input type="checkbox" id="diagnosisOtherCheck" class="diagnosis-checkbox" value="Other">
+            Other
+          </label>
+          <input type="text" id="diagnosisOtherText" class="procedure-other-input" placeholder="Describe diagnosis..." style="display:none;">
+        </div>
+      </div>
+    `;
+    diagnosisGroupsEl.innerHTML = html;
 
-    diagnosisSelectEl.addEventListener('change', () => {
-      const isOther = diagnosisSelectEl.value === 'Other';
-      diagnosisOtherTextEl.style.display = isOther ? '' : 'none';
-      if (!isOther) diagnosisOtherTextEl.value = '';
+    document.getElementById('diagnosisOtherCheck').addEventListener('change', (e) => {
+      const otherText = document.getElementById('diagnosisOtherText');
+      otherText.style.display = e.target.checked ? '' : 'none';
+      if (!e.target.checked) otherText.value = '';
+    });
+
+    diagnosisGroupsEl.querySelectorAll('.diagnosis-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        updateSelectedCount('diagnosisCount', diagnosisGroupsEl, 'diagnosis-checkbox');
+        renderSelectionChips('diagnosisChips', diagnosisGroupsEl, 'diagnosis-checkbox', 'diagnosisOtherCheck');
+      });
+    });
+    document.getElementById('diagnosisOtherText').addEventListener('input', () => {
+      renderSelectionChips('diagnosisChips', diagnosisGroupsEl, 'diagnosis-checkbox', 'diagnosisOtherCheck');
+    });
+    updateSelectedCount('diagnosisCount', diagnosisGroupsEl, 'diagnosis-checkbox');
+    renderSelectionChips('diagnosisChips', diagnosisGroupsEl, 'diagnosis-checkbox', 'diagnosisOtherCheck');
+  }
+
+  function getSelectedDiagnoses() {
+    const boxes = [...diagnosisGroupsEl.querySelectorAll('.diagnosis-checkbox:checked')];
+    return boxes.map(cb => {
+      if (cb.value === 'Other') {
+        const text = document.getElementById('diagnosisOtherText').value.trim();
+        return text ? `Other: ${text}` : 'Other';
+      }
+      return cb.value;
     });
   }
 
-  function getSelectedDiagnosis() {
-    const value = diagnosisSelectEl.value;
-    if (value === 'Other') {
-      const text = diagnosisOtherTextEl.value.trim();
-      return text ? `Other: ${text}` : 'Other';
-    }
-    return value;
+  function resetDiagnosisGroups() {
+    diagnosisGroupsEl.querySelectorAll('.diagnosis-checkbox').forEach(cb => cb.checked = false);
+    const otherText = document.getElementById('diagnosisOtherText');
+    otherText.value = '';
+    otherText.style.display = 'none';
+    updateSelectedCount('diagnosisCount', diagnosisGroupsEl, 'diagnosis-checkbox');
+    renderSelectionChips('diagnosisChips', diagnosisGroupsEl, 'diagnosis-checkbox', 'diagnosisOtherCheck');
   }
 
-  function resetDiagnosisGroups() {
-    diagnosisSelectEl.value = '';
-    diagnosisOtherTextEl.value = '';
-    diagnosisOtherTextEl.style.display = 'none';
+  function populateDiagnosisCheckboxes(diagnoses) {
+    diagnosisGroupsEl.querySelectorAll('.diagnosis-checkbox').forEach(cb => cb.checked = false);
+    const otherText = document.getElementById('diagnosisOtherText');
+    otherText.value = '';
+    otherText.style.display = 'none';
+    (diagnoses || []).forEach(v => {
+      if (v.startsWith('Other:')) {
+        document.getElementById('diagnosisOtherCheck').checked = true;
+        otherText.value = v.slice(6).trim();
+        otherText.style.display = '';
+      } else if (v === 'Other') {
+        document.getElementById('diagnosisOtherCheck').checked = true;
+        otherText.style.display = '';
+      } else {
+        const cb = [...diagnosisGroupsEl.querySelectorAll('.diagnosis-checkbox')].find(el => el.value === v);
+        if (cb) cb.checked = true;
+      }
+    });
+    updateSelectedCount('diagnosisCount', diagnosisGroupsEl, 'diagnosis-checkbox');
+    renderSelectionChips('diagnosisChips', diagnosisGroupsEl, 'diagnosis-checkbox', 'diagnosisOtherCheck');
   }
 
   const BOLD_CATEGORIES = ['Congenital heart surgery', 'Cardiac tumor excision', 'Other'];
@@ -925,6 +1023,7 @@ CaseLogAuth.protect(async function (authKey) {
 
   function renderTimeBlock() {
     const specs = [
+      { field: 'age', label: 'Patient Age', unit: 'yrs' },
       { field: 'cpbTime', label: 'CPB Time', unit: 'min' },
       { field: 'clampTime', label: 'Cross-Clamp Time', unit: 'min' },
       { field: 'arrestTime', label: 'Circulatory Arrest Time', unit: 'min' },
@@ -951,7 +1050,8 @@ CaseLogAuth.protect(async function (authKey) {
   function buildFieldStats() {
     const blocks = [
       renderDistributionBlock('Urgency', tally(c => c.urgency)),
-      renderDistributionBlock('Diagnosis', tally(c => c.diagnosis)),
+      renderDistributionBlock('Sex', tally(c => c.sex)),
+      renderDistributionBlock('Diagnosis', tally(c => diagnosisArray(c))),
       renderDistributionBlock('Procedures', tally(c => c.procedures || [])),
       renderDistributionBlock('Role', tally(c => c.role)),
       renderDistributionBlock('Surgical Steps Performed', tally(c => c.surgicalSteps || [])),
@@ -974,7 +1074,7 @@ CaseLogAuth.protect(async function (authKey) {
       .filter(c => {
         if (procFilter && !(c.procedures || []).includes(procFilter)) return false;
         if (!q) return true;
-        return [c.patientId, c.surgeon, c.notes, c.urgency, c.diagnosis, ...(c.procedures || []), ...(c.surgicalSteps || []), c.exposure, ...cannulationArray(c), c.valveType, ...graftsArray(c), c.cardioplegia]
+        return [c.patientId, c.surgeon, c.notes, c.urgency, ...diagnosisArray(c), ...(c.procedures || []), ...(c.surgicalSteps || []), c.exposure, ...cannulationArray(c), c.valveType, ...graftsArray(c), c.cardioplegia]
           .join(' ').toLowerCase().includes(q);
       })
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -988,8 +1088,10 @@ CaseLogAuth.protect(async function (authKey) {
       tr.innerHTML = `
         <td>${c.date || ''}</td>
         <td>${c.patientId || '—'}</td>
+        <td>${c.sex || '—'}</td>
+        <td>${c.age || '—'}</td>
         <td>${c.urgency || '—'}</td>
-        <td>${c.diagnosis || '—'}</td>
+        <td>${diagnosisArray(c).join(', ') || '—'}</td>
         <td>${(c.procedures || []).join(', ') || ''}</td>
         <td>${c.role || '—'}</td>
         <td>${c.surgeon || ''}</td>
@@ -1249,7 +1351,17 @@ CaseLogAuth.protect(async function (authKey) {
   const surgicalStepsGroupsEl = document.getElementById('surgicalStepsGroups');
 
   function buildSurgicalStepsGroups() {
-    let html = SURGICAL_STEPS_GROUPS.map(group => `
+    let html = `
+      <div class="procedure-category">
+        <div class="procedure-options">
+          <label class="procedure-bold">
+            <input type="checkbox" class="surgical-step-checkbox" value="Skin-to-Skin (Entire Case)">
+            Skin-to-Skin (Entire Case)
+          </label>
+        </div>
+      </div>
+    `;
+    html += SURGICAL_STEPS_GROUPS.map(group => `
       <div class="procedure-category">
         <div class="procedure-category-title">${group.category}</div>
         <div class="procedure-options">
@@ -1380,8 +1492,10 @@ CaseLogAuth.protect(async function (authKey) {
     editingIndex = idx;
     document.getElementById('date').value = c.date || '';
     document.getElementById('patientId').value = c.patientId || '';
+    document.getElementById('sex').value = c.sex || '';
+    document.getElementById('age').value = c.age || '';
     document.getElementById('urgency').value = c.urgency || '';
-    setSelectWithOther(diagnosisSelectEl, diagnosisOtherTextEl, c.diagnosis);
+    populateDiagnosisCheckboxes(diagnosisArray(c));
     populateProcedureCheckboxes(c.procedures);
     document.getElementById('role').value = c.role || '';
     document.getElementById('surgeon').value = c.surgeon || '';
@@ -1402,6 +1516,7 @@ CaseLogAuth.protect(async function (authKey) {
     submitBtn.textContent = 'Update Case';
     cancelEditBtn.style.display = '';
     formHeading.textContent = 'Edit Case';
+    diagnosisGroupsEl.closest('details').open = diagnosisArray(c).length > 0;
     procedureGroupsEl.closest('details').open = (c.procedures || []).length > 0;
     cannulationGroupsEl.closest('details').open = (c.cannulation || []).length > 0;
     surgicalStepsGroupsEl.closest('details').open = (c.surgicalSteps || []).length > 0;
@@ -1417,6 +1532,7 @@ CaseLogAuth.protect(async function (authKey) {
     resetExposureField();
     resetCannulationGroups();
     resetGraftBuilder();
+    diagnosisGroupsEl.closest('details').open = false;
     procedureGroupsEl.closest('details').open = false;
     cannulationGroupsEl.closest('details').open = false;
     surgicalStepsGroupsEl.closest('details').open = false;
@@ -1442,8 +1558,10 @@ CaseLogAuth.protect(async function (authKey) {
     const caseData = {
       date: document.getElementById('date').value,
       patientId: document.getElementById('patientId').value.trim(),
+      sex: document.getElementById('sex').value,
+      age: document.getElementById('age').value,
       urgency: document.getElementById('urgency').value,
-      diagnosis: getSelectedDiagnosis(),
+      diagnosis: getSelectedDiagnoses(),
       procedures: procedures,
       role: document.getElementById('role').value,
       surgeon: document.getElementById('surgeon').value.trim(),
@@ -1479,8 +1597,8 @@ CaseLogAuth.protect(async function (authKey) {
   filterProcedure.addEventListener('change', render);
 
   function getExportTable() {
-    const headers = ['Date', 'Patient ID', 'Urgency', 'Diagnosis', 'Procedure(s)', 'Role', 'Surgeon', 'Surgical Steps Performed', 'Exposure', 'Cannulation', 'Valve Type', 'Grafts', 'Cardioplegia', 'CPB Time (min)', 'Cross-Clamp Time (min)', 'Circulatory Arrest Time (min)', 'Estimated Blood Loss (mL)', 'Lowest Core Temperature (°C)', 'Outcome', 'Notes'];
-    const rows = cases.map(c => [c.date, c.patientId, c.urgency, c.diagnosis, (c.procedures || []).join('; '), c.role, c.surgeon, (c.surgicalSteps || []).join('; '), c.exposure, cannulationArray(c).join('; '), c.valveType, graftsArray(c).join('; '), c.cardioplegia, c.cpbTime, c.clampTime, c.arrestTime, c.bloodLoss, c.temperature, c.outcome, c.notes]);
+    const headers = ['Date', 'Patient ID', 'Sex', 'Age', 'Urgency', 'Diagnosis', 'Procedure(s)', 'Role', 'Surgeon', 'Surgical Steps Performed', 'Exposure', 'Cannulation', 'Valve Type', 'Grafts', 'Cardioplegia', 'CPB Time (min)', 'Cross-Clamp Time (min)', 'Circulatory Arrest Time (min)', 'Estimated Blood Loss (mL)', 'Lowest Core Temperature (°C)', 'Outcome', 'Notes'];
+    const rows = cases.map(c => [c.date, c.patientId, c.sex, c.age, c.urgency, diagnosisArray(c).join('; '), (c.procedures || []).join('; '), c.role, c.surgeon, (c.surgicalSteps || []).join('; '), c.exposure, cannulationArray(c).join('; '), c.valveType, graftsArray(c).join('; '), c.cardioplegia, c.cpbTime, c.clampTime, c.arrestTime, c.bloodLoss, c.temperature, c.outcome, c.notes]);
     return { headers, rows };
   }
 
